@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import { connectDb } from './lib/db.js'
 import authRoutes from './routes/auth.routes.js'
+import productRoutes from './routes/product.routes.js'
 import cookieParser from 'cookie-parser'
 dotenv.config()
 
@@ -10,6 +11,7 @@ app.use(express.json())
 app.use(cookieParser())
 // routes
 app.use('/api/auth', authRoutes)
+app.use('/api/products', productRoutes)
 
 const PORT = process.env.PORT || 5000
 

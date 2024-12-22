@@ -124,12 +124,16 @@ export const getRecommendedProducts = async (req, res) => {
   }
 }
 
-// export const getProductsByCategory = async (req, res) => {
-//   try {
-//     const
-//   } catch (error) {
-//     console.log(error.message)
-//     res.status(500).json({Message: "Error in Category API", Error: error.message})
-//   }
-// }
+export const getProductsByCategory = async (req, res) => {
+  const { category } = req.params
+  try {
+    const products = await Product.find({ category })
+    res.status(200).json(products)
+  } catch (error) {
+    console.log(error.message)
+    res
+      .status(500)
+      .json({ Message: 'Error in Category API', Error: error.message })
+  }
+}
 export const getSingleProduct = async (req, res) => {}

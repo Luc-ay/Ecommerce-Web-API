@@ -75,7 +75,7 @@ export const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id)
 
     if (!product) {
-      res.status(404).json({ Messgae: 'Product not Found' })
+      return res.status(404).json({ Messgae: 'Product not Found' })
     }
 
     if (product.image) {
@@ -136,4 +136,29 @@ export const getProductsByCategory = async (req, res) => {
       .json({ Message: 'Error in Category API', Error: error.message })
   }
 }
-export const getSingleProduct = async (req, res) => {}
+export const toggleFeaturedProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (product) {
+      product.isFeatured = !product.isFeatured
+      const updatedProduct = await product.save()
+      await updateFeaturedProductsCache()
+      res.status(200).json(updatedProduct)
+    } else {
+      res.status(500).json({ Message: 'No Product Found' })
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ Message: 'Error in Featured API', error: error.message })
+  }
+}
+
+async function updateFeaturedProductsCache() {
+  try {
+    const featuredProducts = await Product.find({ isFeatured: true }).lean()
+    await Redis.set('featured_products', JSON.stringify(featuredProducts))
+  } catch (error) {
+    console.log('Error in update cache API')
+  }
+}

@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js'
 import productRoutes from './routes/product.routes.js'
 import couponRoutes from './routes/coupon.routes.js'
 import cartRoutes from './routes/cart.routes.js'
+import paymentRoutes from './routes/payment.routes.js'
 import cookieParser from 'cookie-parser'
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/coupons', couponRoutes)
+app.use('/api/payments', paymentRoutes)
 
 const PORT = process.env.PORT || 5000
 

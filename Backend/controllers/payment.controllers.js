@@ -1,5 +1,6 @@
 import Coupon from '../models/coupon.model.js'
 import { stripe } from '../lib/stripe.js'
+import Order from '../models/order.model.js'
 
 export const createCheckoutSession = async (req, res) => {
   try {
@@ -55,6 +56,13 @@ export const createCheckoutSession = async (req, res) => {
       metadata: {
         userId: req.user._id.toString(),
         couponCode: couponCode || '',
+        products: JSON.stringify(
+          products.map((p) => ({
+            id: p.id,
+            quantity: p.quantity,
+            price: p.price,
+          }))
+        ),
       },
     })
 
@@ -67,6 +75,53 @@ export const createCheckoutSession = async (req, res) => {
     console.log(error.message)
     res.status(500).json({
       message: 'Error in creating checkout session',
+      error: error.message,
+    })
+  }
+}
+
+export const orderSession = async (req, res) => {
+  try {
+    const { sessionId } = req.body
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+    if (session.payment_status === 'paid') {
+      if (session.metadata.couponCode) {
+        await Coupon.findOneAndUpdate(
+          {
+            code: session.metadata.couponCode,
+            userId: session.metadata.userId,
+          },
+          {
+            isActive: false,
+          }
+        )
+      }
+      // create a new order
+      const products = JSON.parse(session.metadata.products)
+      const newOrder = new Order({
+        user: session.metadata.userId,
+        products: products.map((product) => ({
+          products: products.id,
+          quantity: product.quantity,
+          price: product.price,
+        })),
+        totalAmount: session.amount_total / 100,
+        stripeSessionId: session.id,
+      })
+
+      await newOrder.save()
+      res.status(200).json({
+        Success: true,
+        message:
+          'Payment Successful, Order created and coupon deactivated if used',
+        orderId: newOrder._id,
+      })
+    }
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({
+      message: 'Error in creating order API',
       error: error.message,
     })
   }
